@@ -68,7 +68,7 @@ container.setItem(12, new ItemStack(ItemIdentifier.GrassBlock, 1))
 container.setItem(13, new ItemStack(ItemIdentifier.Diamond, 1))
 
 container.onTransaction((action) => {
-    return {"12": MOVEABLE, "13": IMMOVEABLE}
+    return {"-1": IMMOVEABLE}
 })
 ```
 
