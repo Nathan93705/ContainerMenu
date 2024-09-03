@@ -95,5 +95,7 @@ container.onTransaction((action) => {
 container.sendToPlayer();
 ```
 You can also have it set the `"-1"` slot to `IMMOVEABLE` or `MOVEABLE` to make all the slots one of the options.
+
 The specifc slot info comes first, before checking for `"-1"` data.
+
 If no return data is provided items wont be able to be moved
