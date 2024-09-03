@@ -68,7 +68,8 @@ container.setItem(12, new ItemStack(ItemIdentifier.GrassBlock, 1))
 container.setItem(13, new ItemStack(ItemIdentifier.Diamond, 1))
 
 container.onTransaction((action) => {
-    return {"-1": IMMOVEABLE}
+    //Make It So All The Slots Can Be Moved
+    return {"-1": MOVEABLE}
 })
 ```
 
