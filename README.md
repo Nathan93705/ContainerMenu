@@ -59,8 +59,9 @@ container.onTransaction((action) => {
     const slot = ContainerMenu.getSlot(action).sourceSlot!
     const item = container.getItem(slot)!;
     player.sendMessage(`You Clicked On The Item: "${item.type.identifier}"`)
+    container.closeContainer()
 })
-container.closeContainer()
+container.sendToPlayer();
 ```
 Moveable Slots
 ```ts
@@ -71,6 +72,7 @@ container.onTransaction((action) => {
     //Make It So All The Slots Can Be Moved
     return {"-1": MOVEABLE}
 })
+container.sendToPlayer();
 ```
 
 ----
@@ -85,10 +87,12 @@ container.setContents({
 container.onTransaction((action) => {
     const slot = ContainerMenu.getSlot(action).sourceSlot!
     player.sendMessage(`Clicked Item Slot ${slot}`);
+    container.closeContainer()
     // Sets It So The 12th Slot Cant Be Moved
     // And The 13th Can Be
     return { "12": IMMOVEABLE, "13": MOVEABLE }
 })
+container.sendToPlayer();
 ```
 You can also have it set the `"-1"` slot to `IMMOVEABLE` or `MOVEABLE` to make all the slots one of the options.
 The specifc slot info comes first, before checking for `"-1"` data.
