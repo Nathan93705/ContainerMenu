@@ -19,7 +19,7 @@ container.onTransaction(() => {
 })
 
 //When The Player Closes The Container
-container.onContainerClose(() => {
+container.onContainerClose((action) => {
     // Do Something Else
 })
 ```
