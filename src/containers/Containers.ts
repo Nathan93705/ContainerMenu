@@ -1,9 +1,9 @@
-import { BlockPermutation, BlockType, BlockIdentifier } from "@serenityjs/block";
-import { ContainerType } from "@serenityjs/protocol";
-import { Block, Player } from "@serenityjs/world";
+
 import { FakeContainer, getAbovePosition } from "./FakeContainer";
 import { FakeDoubleContainer } from "./FakeDoubleContainer";
 import { ContainerInventory } from "../ContainerMenu";
+import { Player, Block, BlockPermutation, BlockType, BlockIdentifier } from "@serenityjs/core";
+import { ContainerType } from "@serenityjs/protocol";
 
 /**
  * All the fake containers types.
@@ -53,7 +53,7 @@ export enum ContainerSize {
 export class TrappedChestContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.TrappedChest)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.TrappedChest)))!,
             ContainerType.Container,
             ContainerSize.Chest,
             player,
@@ -65,7 +65,7 @@ export class TrappedChestContainer extends FakeContainer {
 export class ChestContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Chest)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Chest)))!,
             ContainerType.Container,
             ContainerSize.Chest,
             player,
@@ -77,7 +77,7 @@ export class ChestContainer extends FakeContainer {
 export class DispenserContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Dispenser)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Dispenser)))!,
             ContainerType.Dispenser,
             ContainerSize.Dispenser,
             player,
@@ -89,7 +89,7 @@ export class DispenserContainer extends FakeContainer {
 export class DropperContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Dropper)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Dropper)))!,
             ContainerType.Dropper,
             ContainerSize.Dropper,
             player,
@@ -101,7 +101,7 @@ export class DropperContainer extends FakeContainer {
 export class EnchantingContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.EnchantingTable)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.EnchantingTable)))!,
             ContainerType.Enchantment,
             ContainerSize.EnchantingTable,
             player,
@@ -113,7 +113,7 @@ export class EnchantingContainer extends FakeContainer {
 export class HopperContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Hopper)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Hopper)))!,
             ContainerType.Hopper,
             ContainerSize.Hopper,
             player,
@@ -129,7 +129,7 @@ export class HopperContainer extends FakeContainer {
 export class CraftingContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.CraftingTable)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.CraftingTable)))!,
             ContainerType.Workbench,
             ContainerSize.CraftingTable,
             player,
@@ -140,7 +140,7 @@ export class CraftingContainer extends FakeContainer {
 export class SmithingContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.SmithingTable)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.SmithingTable)))!,
             ContainerType.SmithingTable,
             ContainerSize.SmithingTable,
             player,
@@ -151,7 +151,7 @@ export class SmithingContainer extends FakeContainer {
 export class FurnaceContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Furnace)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Furnace)))!,
             ContainerType.Furnace,
             ContainerSize.Furnace,
             player,
@@ -162,7 +162,7 @@ export class FurnaceContainer extends FakeContainer {
 export class SmokerContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Smoker)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Smoker)))!,
             ContainerType.Smoker,
             ContainerSize.Smoker,
             player,
@@ -173,7 +173,7 @@ export class SmokerContainer extends FakeContainer {
 export class BlastFurnaceContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.BlastFurnace)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.BlastFurnace)))!,
             ContainerType.BlastFurnace,
             ContainerSize.BlastFurnace,
             player,
@@ -184,7 +184,7 @@ export class BlastFurnaceContainer extends FakeContainer {
 export class AnvilContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Anvil)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Anvil)))!,
             ContainerType.Anvil,
             ContainerSize.Anvil,
             player,
@@ -195,7 +195,7 @@ export class AnvilContainer extends FakeContainer {
 export class BrewingStandContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.BrewingStand)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.BrewingStand)))!,
             ContainerType.BrewingStand,
             ContainerSize.BrewingStand,
             player,
@@ -206,7 +206,7 @@ export class BrewingStandContainer extends FakeContainer {
 export class GrindstoneContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Grindstone)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Grindstone)))!,
             ContainerType.Grindstone,
             ContainerSize.Grindstone,
             player,
@@ -217,7 +217,7 @@ export class GrindstoneContainer extends FakeContainer {
 export class StonecutterContainer extends FakeContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Stonecutter)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Stonecutter)))!,
             ContainerType.Stonecutter,
             ContainerSize.Stonecutter,
             player,
@@ -232,7 +232,7 @@ export class StonecutterContainer extends FakeContainer {
 export class DoubleChestContainer extends FakeDoubleContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.Chest)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Chest)))!,
             ContainerType.Container,
             ContainerSize.DoubleChest,
             player,
@@ -244,7 +244,7 @@ export class DoubleChestContainer extends FakeDoubleContainer {
 export class DoubleTrappedChestContainer extends FakeDoubleContainer {
     public constructor(player: Player, inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, BlockPermutation.create(BlockType.get(BlockIdentifier.TrappedChest)), getAbovePosition(player))!,
+            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.TrappedChest)))!,
             ContainerType.Container,
             ContainerSize.DoubleChest,
             player,

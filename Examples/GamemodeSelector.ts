@@ -1,24 +1,26 @@
-import { ItemIdentifier } from "@serenityjs/item";
-import { ItemNametagComponent, ItemStack, Player } from "@serenityjs/world";
+import { ItemIdentifier, ItemStack, Player } from "@serenityjs/core";
 import { ContainerMenu } from "../src/ContainerMenu"
 import { FakeContainerType } from "../src/containers/Containers";
+import { CompoundTag } from "@serenityjs/nbt";
 
 function openMenu(player: Player) {
     const container = ContainerMenu.create(player, FakeContainerType.Chest)
 
-    const survival = new ItemStack(ItemIdentifier.GrassBlock, 1)
-    const comp1 = new ItemNametagComponent(survival)
-    comp1.setCurrentValue("Survival")
+    const survival = new ItemStack(ItemIdentifier.GrassBlock)
+    const comp1 = new CompoundTag("display");
+    comp1.createStringTag("Name", "Survival");
+    survival.nbt.add(comp1);
 
-    const creative = new ItemStack(ItemIdentifier.CommandBlock, 1)
-    const comp2 = new ItemNametagComponent(creative)
-    comp2.setCurrentValue("Creative")
+    const creative = new ItemStack(ItemIdentifier.CommandBlock)
+    const comp2 = new CompoundTag("display");
+    comp2.createStringTag("Name", "Creative");
+    creative.nbt.add(comp2);
 
-    const spectator = new ItemStack(ItemIdentifier.Barrier, 1)
-    const comp3 = new ItemNametagComponent(spectator)
-    comp3.setCurrentValue("Spectator")
+    const spectator = new ItemStack(ItemIdentifier.Barrier)
+    const comp3 = new CompoundTag("display");
+    comp3.createStringTag("Name", "Spectator");
+    spectator.nbt.add(comp3);
 
-    player.getComponent("minecraft:inventory").container.addItem(survival)
 
     container.setItem(12, survival)
     container.setItem(13, creative)

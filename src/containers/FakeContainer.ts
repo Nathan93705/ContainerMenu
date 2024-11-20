@@ -1,12 +1,9 @@
-import { Block, ItemStack, Player } from "@serenityjs/world";
 import { ContainerInventory, IMMOVEABLE, MOVEABLE } from "../ContainerMenu";
-import { BlockActorDataPacket, BlockCoordinates, ContainerClosePacket, ContainerId, ContainerOpenPacket, ContainerType, InventoryContentPacket, ItemStackRequestAction, NetworkItemStackDescriptor, UpdateBlockFlagsType, UpdateBlockPacket } from "@serenityjs/protocol";
-import { BlockPermutation } from "@serenityjs/block";
+import { BlockActorDataPacket, BlockPosition, ContainerId, ContainerType, ItemStackRequestAction, UpdateBlockFlagsType, UpdateBlockPacket } from "@serenityjs/protocol";
 import { PlayerManager } from "../PlayerManager";
-import { ItemIdentifier } from "@serenityjs/item";
 import { CompoundTag, StringTag } from "@serenityjs/nbt";
-import { waitTicks } from "..";
 import { ContainerSize } from "./Containers";
+import { Player, Block, BlockPermutation, ItemStack, ItemIdentifier, BlockContainer } from "@serenityjs/core";
 
 interface ItemInteractionData { [slot: number]: MOVEABLE | IMMOVEABLE }
 
@@ -14,23 +11,23 @@ type TransactionCallback = (action: ItemStackRequestAction) => ItemInteractionDa
 type ContainerCloseCallback = () => void;
 
 
-export function getAbovePosition(player: Player): BlockCoordinates {
+export function getAbovePosition(player: Player): BlockPosition {
     const pos = player.position
-    pos.y += 2;
-    return new BlockCoordinates(pos.x, pos.y, pos.z);
+    return new BlockPosition(Math.floor(pos.x), Math.floor(pos.y + 2), Math.floor(pos.z));
 }
 
-export function getBlockAtPosition(player: Player, pos: BlockCoordinates): Block {
+export function getBlockAtPosition(player: Player, pos: BlockPosition): Block {
     return player.dimension.getBlock(pos);
 }
 
 export class FakeContainer {
     private readonly containerId: ContainerId;
-    protected position!: BlockCoordinates;
+    protected position!: BlockPosition;
     private readonly block: Block;
     private readonly containerType: ContainerType;
     private readonly containerSize: ContainerSize;
     private readonly player: Player;
+    private blockContainer: BlockContainer;
     protected inventory: ContainerInventory;
     protected customName!: string;
 
@@ -44,59 +41,53 @@ export class FakeContainer {
         this.containerSize = containerSize;
         this.inventory = inventory;
         this.player = player;
+        this.blockContainer = new BlockContainer(block, containerType, ContainerId.Ui, containerSize);
     }
 
     /**
      * Places the container client-side.
      * This is required in Bedrock edition.
      */
-    protected placeContainer(pos: BlockCoordinates): void {
+    protected placeContainer(pos: BlockPosition): void {
         let packet = new UpdateBlockPacket();
         packet.position = pos;
         packet.networkBlockId = BlockPermutation.resolve(this.block.getType().identifier).network;
         packet.flags = 0;
         packet.layer = 0;
         packet.offset = 0;
-        this.player.session.send(packet);
+        this.player.send(packet);
     }
 
     /**
      * Opens the container client-side.
      */
     protected openContainer(): void {
-        const pk = new ContainerOpenPacket();
-        pk.identifier = this.containerId;
-        pk.type = this.containerType;
-        pk.position = this.position;
-        pk.uniqueId = -1n;
-        this.player.session.send(pk);
+        this.blockContainer.show(this.player)
     }
 
     /**
      * Force-closes the container client-side.
-     *
-     * @remarks This will destruct the container
      */
     public closeContainer(): void {
-        const pk = new ContainerClosePacket();
-        pk.identifier = this.containerId;
-        pk.serverInitiated = true;
-        pk.type = this.containerType;
-        this.player.session.send(pk);
+        this.blockContainer.close(this.player)
     }
 
     /**
      * Sends the fake container to the client.
      */
     public sendToPlayer(): void {
-        PlayerManager.setContainer(this.player.session, this);
+        console.log("sendToPlayer called for:", this.player.username);
+        PlayerManager.setContainer(this.player.connection, this);
+        console.log(`Set Map: `, PlayerManager.containerMap.size);
         this.position = getAbovePosition(this.player);
+
         this.placeContainer(this.position);
+
         if (this.customName) this.sendCustomName();
-        waitTicks(() => {
-            this.openContainer();
-            this.updateAllItems();
-        }, 3)
+
+        this.openContainer();
+
+        this.player.getWorld().schedule(1).on(() => this.updateAllItems())
     }
 
     /**
@@ -115,7 +106,7 @@ export class FakeContainer {
         }
         this.inventory[slot] = item;
         // If the container is not sent yet, no need to update the slot.
-        if (PlayerManager.hasContainer(this.player.session)) {
+        if (PlayerManager.hasContainer(this.player.connection)) {
             this.updateAllItems();
         }
     }
@@ -145,45 +136,17 @@ export class FakeContainer {
             }
         }
     }
-    /**
-     * Updates a single item in the container's inventory client-side.
-     */
-    /*
-    private updateItem(slot: number, item: ItemStack): void {
-        if (slot < 0 || slot >= this.containerSize) throw new Error(`Slot ${slot} is out of range (container has ${this.containerSize} slots)`);
-        const packet = new InventorySlotPacket();
-        const itemNetworkDescriptor = ItemStack.toNetworkStack(item);
-
-        packet.item = itemNetworkDescriptor;
-        packet.containerId = this.containerId;
-        packet.slot = slot;
-        packet.dynamicContainerId = 0;
-
-        this.player.session.send(packet);
-    }
-    */
 
     /**
      * Updates the container's inventory client-side.
      */
     protected updateAllItems(): void {
-        /*
-        for (let [slot, item] of Object.entries(this.inventory)) {
-            this.updateItem(+slot, item);
-        }
-        */
-        const items: NetworkItemStackDescriptor[] = [];
+        this.blockContainer.clear()
         for (let i = 0; i < this.containerSize; i++) {
-            const item = this.inventory[i] ?? new ItemStack(ItemIdentifier.Air, 1)
-            items.push(ItemStack.toNetworkStack(item))
+            const item = this.inventory[i] ?? new ItemStack(ItemIdentifier.Air)
+            this.blockContainer.setItem(i, item)
         }
-        const packet = new InventoryContentPacket();
-
-        packet.containerId = this.containerId;
-        packet.items = items
-        packet.dynamicContainerId = 0;
-
-        this.player.session.send(packet)
+        this.blockContainer.update(this.player)
     }
 
     /**
@@ -216,7 +179,7 @@ export class FakeContainer {
         if (this.inventory[slot]) {
             delete this.inventory[slot];
             // If the container is not sent yet, no need to update the slot.
-            if (PlayerManager.hasContainer(this.player.session)) {
+            if (PlayerManager.hasContainer(this.player.connection)) {
                 this.updateAllItems();
             }
         }
@@ -251,7 +214,7 @@ export class FakeContainer {
         pk.position = this.position;
         if (!pk.nbt) pk.nbt = new CompoundTag()
         pk.nbt.addTag(new StringTag("CustomName", this.customName))
-        this.player.session.send(pk)
+        this.player.send(pk)
     }
 
     /**
@@ -305,7 +268,8 @@ export class FakeContainer {
      * Destroys the container client-side,
      * and replaces it with the original block.
      */
-    protected destroyContainer(pos: BlockCoordinates): void {
+    protected destroyContainer(pos: BlockPosition): void {
+        this.closeContainer()
         const block = getBlockAtPosition(this.player, pos)
         let packet = new UpdateBlockPacket();
         packet.position = pos;
@@ -313,7 +277,7 @@ export class FakeContainer {
         packet.flags = UpdateBlockFlagsType.Network;
         packet.layer = 0;
         packet.offset = 0;
-        this.player.session.send(packet);
+        this.player.send(packet);
     }
 
     /**
@@ -330,7 +294,5 @@ export class FakeContainer {
      */
     public destruct(): void {
         this.destroyContainer(this.position);
-        PlayerManager.removeContainer(this.player.session);
     }
 }
-

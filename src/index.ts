@@ -1,47 +1,22 @@
-import { Serenity } from "@serenityjs/serenity";
-import { WorldEvent } from "@serenityjs/world";
 import { PlayerManager } from "./PlayerManager";
 import { PacketListener } from "./PacketListener";
 
+import { Plugin, PluginType } from "@serenityjs/plugins";
 
-interface tempData {
-	ticksLeft: number
-	callback: () => void
+class ContainerMenuPlugin extends Plugin {
+
+	public readonly type = PluginType.Api;
+
+	public constructor() {
+		super("ContainerMenu", "1.0.0");
+	}
+
+	public onInitialize(): void {
+		PacketListener.loadListeners(this.serenity); setInterval(() => {
+			console.log(`Map Check: `, PlayerManager.containerMap.size);
+			console.log("Map Keys: ", Array.from(PlayerManager.containerMap.keys()).length);
+		}, 3000);
+	}
 }
 
-let nextTickCallbacks: tempData[] = []
-
-export function waitTicks(callback: () => void, ticks: number) {
-	nextTickCallbacks.push({ ticksLeft: ticks, callback: callback })
-}
-
-export function onStartup(serenity: Serenity): void {
-
-	PacketListener.loadListeners(serenity);
-
-	serenity.worlds.on(WorldEvent.WorldTick, () => {
-		if (nextTickCallbacks.length > 0) {
-			const newData: tempData[] = []
-			for (const { ticksLeft, callback } of nextTickCallbacks) {
-				if (ticksLeft < 1) {
-					callback()
-					continue;
-				} else {
-					newData.push({
-						ticksLeft: ticksLeft - 1,
-						callback: callback
-					})
-				}
-			}
-			nextTickCallbacks = newData
-		}
-	})
-}
-
-export function onShutdown(): void {
-	PlayerManager.getAllContainers().forEach(container => {
-		container.closeContainer()
-	})
-}
-
-
+export default new ContainerMenuPlugin();

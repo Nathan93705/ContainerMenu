@@ -1,8 +1,9 @@
-import { ItemStack, Player } from "@serenityjs/world";
+import { ItemStack, Player } from "@serenityjs/core";
 import { FakeContainer } from "./containers/FakeContainer";
 import { PlayerManager } from "./PlayerManager";
 import { ItemStackRequestAction, ItemStackRequestActionType } from "@serenityjs/protocol";
 import { AnvilContainer, BlastFurnaceContainer, BrewingStandContainer, ChestContainer, CraftingContainer, DispenserContainer, DoubleChestContainer, DoubleTrappedChestContainer, DropperContainer, EnchantingContainer, FakeContainerType, FurnaceContainer, GrindstoneContainer, HopperContainer, SmithingContainer, SmokerContainer, StonecutterContainer, TrappedChestContainer } from "./containers/Containers";
+import { Connection } from "@serenityjs/raknet";
 
 /**
  * Cancels Container Menu Item Transaction
@@ -13,6 +14,7 @@ export class IMMOVEABLE { }
 export type ContainerInventory = Record<number, ItemStack>;
 
 export namespace ContainerMenu {
+
     /**
      * Creates a fake container for a specific player.
      *
@@ -22,7 +24,7 @@ export namespace ContainerMenu {
      * @param inventory - The inventory of the container.
      */
     export function create(player: Player, container: FakeContainerType, inventory?: ContainerInventory): FakeContainer {
-        if (!PlayerManager.hasContainer(player.session)) {
+        if (!PlayerManager.hasContainer(player.connection)) {
             switch (container) {
                 case FakeContainerType.Chest:
                     return new ChestContainer(player, inventory);
