@@ -1,9 +1,9 @@
 import { BlockActorDataPacket, BlockPosition, ContainerType } from "@serenityjs/protocol";
+import { ByteTag, CompoundTag, IntTag, StringTag, Tag } from "@serenityjs/nbt";
 import { FakeContainer, getAbovePosition } from "./FakeContainer";
 import { ContainerInventory } from "../ContainerMenu";
-import { PlayerManager } from "../PlayerManager";
-import { ByteTag, CompoundTag, IntTag, NBTTag, StringTag } from "@serenityjs/nbt";
 import { Player, Block } from "@serenityjs/core";
+import { PlayerManager } from "../PlayerManager";
 
 
 
@@ -20,7 +20,7 @@ export class FakeDoubleContainer extends FakeContainer {
      * Sends the fake container to the client.
      */
     public sendToPlayer(): void {
-        PlayerManager.setContainer(this.player2.connection, this);
+        PlayerManager.setContainer(this.player2.connection, this)
         this.position = getAbovePosition(this.player2);
         this.position2 = new BlockPosition(this.position.x + 1, this.position.y, this.position.z);
         this.placeContainer(this.position);
@@ -29,7 +29,7 @@ export class FakeDoubleContainer extends FakeContainer {
         this.sendNbtData(false);
         this.openContainer();
 
-        this.player2.getWorld().schedule(1).on(() => this.updateAllItems())
+        this.player2.world.schedule(1).on(() => this.updateAllItems())
     }
 
     /**
@@ -38,12 +38,12 @@ export class FakeDoubleContainer extends FakeContainer {
     private sendNbtData(pairLead: boolean = false): void {
         const pk = new BlockActorDataPacket();
         pk.position = pairLead ? this.position : this.position2;
-        let nbtData: Record<string, NBTTag> = {};
+        let nbtData: Record<string, Tag> = {};
         if (!pk.nbt) pk.nbt = new CompoundTag()
-        if (this.customName) nbtData["CustomName"] = new StringTag("CustomName", this.customName);
-        nbtData["pairlead"] = new ByteTag("pairlead", pairLead ? 1 : 0);
-        nbtData["pairx"] = new IntTag("pairx", pairLead ? this.position2.x : this.position.x)
-        nbtData["pairz"] = new IntTag("pairz", pairLead ? this.position2.z : this.position.z)
+        if (this.customName) nbtData["CustomName"] = new StringTag({ value: this.customName, name: "CustomName" });
+        nbtData["pairlead"] = new ByteTag({ name: "pairlead", value: pairLead ? 1 : 0 });
+        nbtData["pairx"] = new IntTag({ name: "pairx", value: pairLead ? this.position2.x : this.position.x })
+        nbtData["pairz"] = new IntTag({ name: "pairz", value: pairLead ? this.position2.z : this.position.z })
         for (const [_, tag] of Object.entries(nbtData)) pk.nbt.addTag(tag);
         this.player2.send(pk)
     }
@@ -54,6 +54,6 @@ export class FakeDoubleContainer extends FakeContainer {
     public destruct(): void {
         this.destroyContainer(this.position);
         this.destroyContainer(this.position2);
-        PlayerManager.removeContainer(this.player2.connection);
+        PlayerManager.getContainer(this.player2.connection)!.destruct()
     }
 }

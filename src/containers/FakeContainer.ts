@@ -1,9 +1,9 @@
-import { ContainerInventory, IMMOVEABLE, MOVEABLE } from "../ContainerMenu";
 import { BlockActorDataPacket, BlockPosition, ContainerId, ContainerType, ItemStackRequestAction, UpdateBlockFlagsType, UpdateBlockPacket } from "@serenityjs/protocol";
-import { PlayerManager } from "../PlayerManager";
-import { CompoundTag, StringTag } from "@serenityjs/nbt";
-import { ContainerSize } from "./Containers";
 import { Player, Block, BlockPermutation, ItemStack, ItemIdentifier, BlockContainer } from "@serenityjs/core";
+import { ContainerInventory, IMMOVEABLE, MOVEABLE } from "../ContainerMenu";
+import { CompoundTag, StringTag } from "@serenityjs/nbt";
+import { PlayerManager } from "../PlayerManager";
+import { ContainerSize } from "./Containers";
 
 interface ItemInteractionData { [slot: number]: MOVEABLE | IMMOVEABLE }
 
@@ -21,27 +21,29 @@ export function getBlockAtPosition(player: Player, pos: BlockPosition): Block {
 }
 
 export class FakeContainer {
-    private readonly containerId: ContainerId;
     protected position!: BlockPosition;
     private readonly block: Block;
-    private readonly containerType: ContainerType;
     private readonly containerSize: ContainerSize;
     private readonly player: Player;
     private blockContainer: BlockContainer;
     protected inventory: ContainerInventory;
     protected customName!: string;
+    private timeout: number
 
     private transactionCallback!: TransactionCallback;
     private containerCloseCallback!: ContainerCloseCallback;
 
     constructor(block: Block, containerType: ContainerType, containerSize: number, player: Player, inventory: ContainerInventory = {}) {
-        this.containerId = ContainerId.Ui;
         this.block = block;
-        this.containerType = containerType;
         this.containerSize = containerSize;
         this.inventory = inventory;
         this.player = player;
         this.blockContainer = new BlockContainer(block, containerType, ContainerId.Ui, containerSize);
+        this.timeout = 60000
+    }
+
+    public setTimeout(ms: number) {
+        this.timeout = ms
     }
 
     /**
@@ -51,7 +53,7 @@ export class FakeContainer {
     protected placeContainer(pos: BlockPosition): void {
         let packet = new UpdateBlockPacket();
         packet.position = pos;
-        packet.networkBlockId = BlockPermutation.resolve(this.block.getType().identifier).network;
+        packet.networkBlockId = BlockPermutation.resolve(this.block.type.identifier).network;
         packet.flags = 0;
         packet.layer = 0;
         packet.offset = 0;
@@ -76,9 +78,7 @@ export class FakeContainer {
      * Sends the fake container to the client.
      */
     public sendToPlayer(): void {
-        console.log("sendToPlayer called for:", this.player.username);
-        PlayerManager.setContainer(this.player.connection, this);
-        console.log(`Set Map: `, PlayerManager.containerMap.size);
+        PlayerManager.setContainer(this.player.connection, this)
         this.position = getAbovePosition(this.player);
 
         this.placeContainer(this.position);
@@ -87,7 +87,10 @@ export class FakeContainer {
 
         this.openContainer();
 
-        this.player.getWorld().schedule(1).on(() => this.updateAllItems())
+        this.player.world.schedule(1).on(() => this.updateAllItems())
+        setTimeout(() => {
+
+        }, this.timeout)
     }
 
     /**
@@ -106,7 +109,7 @@ export class FakeContainer {
         }
         this.inventory[slot] = item;
         // If the container is not sent yet, no need to update the slot.
-        if (PlayerManager.hasContainer(this.player.connection)) {
+        if (this.player.openedContainer && this.player.hasTag(`ContainerMenu:Open`)) {
             this.updateAllItems();
         }
     }
@@ -179,9 +182,8 @@ export class FakeContainer {
         if (this.inventory[slot]) {
             delete this.inventory[slot];
             // If the container is not sent yet, no need to update the slot.
-            if (PlayerManager.hasContainer(this.player.connection)) {
-                this.updateAllItems();
-            }
+            if (PlayerManager.hasContainer(this.player.connection)) this.updateAllItems();
+
         }
     }
 
@@ -213,7 +215,7 @@ export class FakeContainer {
         const pk = new BlockActorDataPacket();
         pk.position = this.position;
         if (!pk.nbt) pk.nbt = new CompoundTag()
-        pk.nbt.addTag(new StringTag("CustomName", this.customName))
+        pk.nbt.addTag(new StringTag({ value: this.customName, name: "CustomName" }))
         this.player.send(pk)
     }
 
@@ -273,7 +275,7 @@ export class FakeContainer {
         const block = getBlockAtPosition(this.player, pos)
         let packet = new UpdateBlockPacket();
         packet.position = pos;
-        packet.networkBlockId = BlockPermutation.resolve(block.getType().identifier).network;
+        packet.networkBlockId = BlockPermutation.resolve(block.type.identifier).network;
         packet.flags = UpdateBlockFlagsType.Network;
         packet.layer = 0;
         packet.offset = 0;

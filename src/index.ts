@@ -1,7 +1,8 @@
-import { PlayerManager } from "./PlayerManager";
+import { WorldEvent } from "@serenityjs/core";
 import { PacketListener } from "./PacketListener";
-
 import { Plugin, PluginType } from "@serenityjs/plugins";
+import { openMenu } from "../Examples/GamemodeSelector"
+
 
 class ContainerMenuPlugin extends Plugin {
 
@@ -12,10 +13,17 @@ class ContainerMenuPlugin extends Plugin {
 	}
 
 	public onInitialize(): void {
-		PacketListener.loadListeners(this.serenity); setInterval(() => {
-			console.log(`Map Check: `, PlayerManager.containerMap.size);
-			console.log("Map Keys: ", Array.from(PlayerManager.containerMap.keys()).length);
-		}, 3000);
+		PacketListener.loadListeners(this.serenity);
+		/*
+		setInterval(() => {
+			console.log(`Check Size: `, PacketListener.ContainerMap.size)
+		}, 3000)
+		*/
+		this.serenity.on(WorldEvent.PlayerChat, (event) => {
+			const player = event.player
+			openMenu(player)
+		})
+
 	}
 }
 

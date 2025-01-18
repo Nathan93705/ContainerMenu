@@ -1,8 +1,7 @@
-
+import { Player, Block, BlockPermutation, BlockType, BlockIdentifier } from "@serenityjs/core";
 import { FakeContainer, getAbovePosition } from "./FakeContainer";
 import { FakeDoubleContainer } from "./FakeDoubleContainer";
 import { ContainerInventory } from "../ContainerMenu";
-import { Player, Block, BlockPermutation, BlockType, BlockIdentifier } from "@serenityjs/core";
 import { ContainerType } from "@serenityjs/protocol";
 
 /**
