@@ -1,13 +1,13 @@
 {
   "name": "container-menu",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "author": "Nathan93705",
   "description": "A Library Plugin For A Quick Way To Make Container Menu's, such as chest ui's",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "license": "MIT",
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "watch": "tsup --watch"
   },
   "tsup": {
     "entry": [
@@ -21,9 +21,8 @@
     "minify": true
   },
   "peerDependencies": {
-    "@serenityjs/plugins": "*",
     "@serenityjs/core": "*",
-    "@serenityjs/nbt": "*",
+    "@serenityjs/plugins": "*",
     "@serenityjs/protocol": "*",
     "@serenityjs/raknet": "*"
   },
