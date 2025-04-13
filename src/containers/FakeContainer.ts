@@ -1,5 +1,5 @@
-import { BlockActorDataPacket, BlockPosition, ContainerId, ContainerType, ItemStackRequestAction, UpdateBlockFlagsType, UpdateBlockPacket } from "@serenityjs/protocol";
-import { Player, Block, BlockPermutation, ItemStack, ItemIdentifier, BlockContainer } from "@serenityjs/core";
+import { BlockActorDataPacket, BlockPosition, ContainerClosePacket, ContainerId, ContainerName, ContainerOpenPacket, ContainerType, FullContainerName, InventoryContentPacket, InventorySlotPacket, ItemStackRequestAction, NetworkItemStackDescriptor, UpdateBlockFlagsType, UpdateBlockPacket } from "@serenityjs/protocol";
+import { Player, BlockPermutation, ItemStack, ItemIdentifier, BlockIdentifier } from "@serenityjs/core";
 import { ContainerInventory, IMMOVEABLE, MOVEABLE } from "../ContainerMenu";
 import { CompoundTag, StringTag } from "@serenityjs/nbt";
 import { PlayerManager } from "../PlayerManager";
@@ -7,8 +7,8 @@ import { ContainerSize } from "./Containers";
 
 interface ItemInteractionData { [slot: number]: MOVEABLE | IMMOVEABLE }
 
-type TransactionCallback = (action: ItemStackRequestAction) => ItemInteractionData | void;
-type ContainerCloseCallback = () => void;
+type TransactionCallback = (res: { action: ItemStackRequestAction, player: Player }) => ItemInteractionData | void;
+type ContainerCloseCallback = (player?: Player) => void;
 
 
 export function getAbovePosition(player: Player): BlockPosition {
@@ -16,119 +16,83 @@ export function getAbovePosition(player: Player): BlockPosition {
     return new BlockPosition(Math.floor(pos.x), Math.floor(pos.y + 2), Math.floor(pos.z));
 }
 
-export function getBlockAtPosition(player: Player, pos: BlockPosition): Block {
-    return player.dimension.getBlock(pos);
-}
-
 export class FakeContainer {
-    protected position!: BlockPosition;
-    private readonly block: Block;
+    public readonly blockIdentifier: BlockIdentifier;
+
+    public readonly containerId: ContainerId = ContainerId.None
+    public readonly containerType: ContainerType
     private readonly containerSize: ContainerSize;
-    private readonly player: Player;
-    private blockContainer: BlockContainer;
-    protected inventory: ContainerInventory;
-    protected customName!: string;
-    private timeout: number
 
-    private transactionCallback!: TransactionCallback;
-    private containerCloseCallback!: ContainerCloseCallback;
+    private inventory: ContainerInventory;
+    private customName?: string;
 
-    constructor(block: Block, containerType: ContainerType, containerSize: number, player: Player, inventory: ContainerInventory = {}) {
-        this.block = block;
+    private transactionCallback?: TransactionCallback;
+    private containerCloseCallback?: ContainerCloseCallback;
+
+    constructor(block: BlockIdentifier, containerType: ContainerType, containerSize: number, inventory: ContainerInventory = {}) {
+        this.blockIdentifier = block;
+        this.containerType = containerType;
         this.containerSize = containerSize;
         this.inventory = inventory;
-        this.player = player;
-        this.blockContainer = new BlockContainer(block, containerType, ContainerId.Ui, containerSize);
-        this.timeout = 60000
     }
 
-    public setTimeout(ms: number) {
-        this.timeout = ms
-    }
 
-    /**
-     * Places the container client-side.
-     * This is required in Bedrock edition.
-     */
-    protected placeContainer(pos: BlockPosition): void {
-        let packet = new UpdateBlockPacket();
-        packet.position = pos;
-        packet.networkBlockId = BlockPermutation.resolve(this.block.type.identifier).network;
-        packet.flags = 0;
-        packet.layer = 0;
-        packet.offset = 0;
-        this.player.send(packet);
-    }
-
-    /**
-     * Opens the container client-side.
-     */
-    protected openContainer(): void {
-        this.blockContainer.show(this.player)
-    }
-
-    /**
-     * Force-closes the container client-side.
-     */
-    public closeContainer(): void {
-        this.blockContainer.close(this.player)
-    }
 
     /**
      * Sends the fake container to the client.
+     * @remarks if used on a command, recommended to send it like 25-30 ticks after to give time for chat to close 
      */
-    public sendToPlayer(): void {
-        PlayerManager.setContainer(this.player.connection, this)
-        this.position = getAbovePosition(this.player);
+    public show(player: Player): void {
+        if (PlayerManager.hasContainer(player)) throw Error(`Player Already Has A Fake Container Open`)
+        const blockPos = getAbovePosition(player);
 
-        this.placeContainer(this.position);
+        this.placeContainer(player, blockPos);
 
-        if (this.customName) this.sendCustomName();
+        if (this.customName) this.sendCustomName(player, blockPos);
 
-        this.openContainer();
+        this.openContainer(player, blockPos)
 
-        this.player.world.schedule(1).on(() => this.updateAllItems())
-        setTimeout(() => {
-
-        }, this.timeout)
+        const schedule = player.world.schedule(1)
+        schedule.on(() => this.update(player))
     }
 
+
+
+
+    // ----------------------------
+    //  Handle Container Inventory
+    // ----------------------------
+
+
+
+
+
     /**
-     * Sets an item in the container.
-     *
+     * Sets the item in the specified slot.
      * @param slot - The slot to set the item in.
      * @param item - The item to set.
-     * @param destructOld - Whether to destroy the old item.
-     *
-     *
-     * @remarks This will update the item client-side if needed to.
      */
     public setItem(slot: number, item: ItemStack): void {
         if (slot < 0 || slot >= this.containerSize) {
             throw new Error(`Slot ${slot} is out of range (container has ${this.containerSize} slots)`);
         }
         this.inventory[slot] = item;
-        // If the container is not sent yet, no need to update the slot.
-        if (this.player.openedContainer && this.player.hasTag(`ContainerMenu:Open`)) {
-            this.updateAllItems();
-        }
     }
 
     /**
-     * Sets the container's inventory contents.
-     *
-     * @param contents - The contents to set.
-     * @param destructOld - Whether to destroy the old items.
+     * Gets the item in the specified slot.
+     * @param slot - The slot to get the item from.
+     * @returns The item in the specified slot, or undefined if the slot is empty.
      */
-    public setContents(contents: ContainerInventory): void {
-        for (const [slot, item] of Object.entries(contents)) {
-            this.setItem(+slot, item);
+    public getItem(slot: number): ItemStack | undefined {
+        if (slot < 0 || slot >= this.containerSize) {
+            throw new Error(`Slot ${slot} is out of range (container has ${this.containerSize} slots)`);
         }
+        return this.inventory[slot];
     }
 
     /**
-     * Adds an item to the container
-     *
+     * Adds an item to the first available slot in the container.
      * @param item - The item to add.
      */
     public addItem(item: ItemStack): void {
@@ -141,39 +105,8 @@ export class FakeContainer {
     }
 
     /**
-     * Updates the container's inventory client-side.
-     */
-    protected updateAllItems(): void {
-        this.blockContainer.clear()
-        for (let i = 0; i < this.containerSize; i++) {
-            const item = this.inventory[i] ?? new ItemStack(ItemIdentifier.Air)
-            this.blockContainer.setItem(i, item)
-        }
-        this.blockContainer.update(this.player)
-    }
-
-    /**
-     * Returns the item at the specified slot.
-     *
-     * @param slot - The slot to get the item from.
-     */
-    public getItem(slot: number): ItemStack | undefined {
-        if (slot < 0 || slot >= this.containerSize) {
-            throw new Error(`Slot ${slot} is out of range (container has ${this.containerSize} slots)`);
-        }
-        return this.inventory[slot];
-    }
-
-    /**
-     * Returns the contents of the container.
-     */
-    public getContents(): ContainerInventory {
-        return this.inventory;
-    }
-
-    /**
-     * Clears a container's slot,
-     * updating it client-side if needed.
+     * Removes the item from the specified slot.
+     * @param slot - The slot to remove the item from.
      */
     public clearItem(slot: number): void {
         if (slot < 0 || slot >= this.containerSize) {
@@ -181,15 +114,29 @@ export class FakeContainer {
         }
         if (this.inventory[slot]) {
             delete this.inventory[slot];
-            // If the container is not sent yet, no need to update the slot.
-            if (PlayerManager.hasContainer(this.player.connection)) this.updateAllItems();
-
         }
     }
 
     /**
-     * Clears the container's contents,
-     * updating it client-side if needed.
+     * Sets the contents of the container.
+     * @param contents - The contents to set.
+     */
+    public setContents(contents: ContainerInventory): void {
+        for (const [slot, item] of Object.entries(contents)) {
+            this.setItem(+slot, item);
+        }
+    }
+
+    /**
+     * Gets the contents of the container.
+     * @returns The contents of the container.
+     */
+    public getContents(): ContainerInventory {
+        return this.inventory;
+    }
+
+    /**
+     * Clears the contents of the container.
      */
     public clearContents(): void {
         for (const [slot, item] of Object.entries(this.inventory)) {
@@ -197,11 +144,151 @@ export class FakeContainer {
         }
     }
 
+
+    /**
+     * Updates the item in the specified slot.
+     * @param slot - The slot to update the item in.
+     * @param item - The item to update.
+     */
+    /*
+    private updateSlot(player: Player, slot: number, item: ItemStack): void {
+        if (slot < 0 || slot >= this.containerSize) throw new Error(`Slot ${slot} is out of range (container has ${this.containerSize} slots)`);
+        const packet = new InventorySlotPacket();
+        const itemNetworkDescriptor = ItemStack.toNetworkStack(item);
+
+        packet.item = itemNetworkDescriptor;
+        packet.containerId = this.containerId;
+        packet.slot = slot;
+        packet.storageItem = new NetworkItemStackDescriptor(0);
+        packet.fullContainerName = new FullContainerName(0, 0);
+
+        player.send(packet);
+    }
+    */
+
+    /**
+     * Updates all items in the container.
+     * @remarks This is called when the container is opened or when an item is added/removed.
+     */
+    public update(player: Player): void {
+        if (!PlayerManager.hasContainer(player)) throw Error(`Player Doesnt Have A Fake Container Open`)
+
+        /*
+        for (let [slot, item] of Object.entries(this.inventory)) {
+            this.updateSlot(player, +slot, item);
+        }
+        */
+
+        const items: NetworkItemStackDescriptor[] = [];
+        for (let i = 0; i < this.containerSize; i++) {
+            const itemStack = this.inventory[i] ?? new ItemStack(ItemIdentifier.Air)
+            const networkStack = ItemStack.toNetworkStack(itemStack)
+            items.push(networkStack)
+        }
+
+        const packet = new InventoryContentPacket();
+        packet.containerId = this.containerId;
+        packet.items = items
+        packet.fullContainerName = new FullContainerName(ContainerName.Container)
+        packet.storageItem = new NetworkItemStackDescriptor(0);
+
+        player.send(packet)
+    }
+
+
+    // ------------------------------
+    //  Handle Container Placement
+    // ------------------------------
+
+    /**
+     * Destroys The Container Block - used for internals.
+     * @param player The Player To Send The Packet Too
+     * @param pos The Block Position
+     * @remarks This is called when the container is closed, to remove the block.
+     */
+    protected destroyContainer(player: Player, pos: BlockPosition): void {
+        const block = player.dimension.getBlock(pos);
+        const networkId = BlockPermutation.resolve(block.type.identifier).networkId
+        let packet = new UpdateBlockPacket();
+        packet.position = pos;
+        packet.networkBlockId = networkId;
+        packet.flags = UpdateBlockFlagsType.Network;
+        packet.layer = 0;
+        packet.offset = 0;
+        player.send(packet);
+    }
+
+    /**
+     * Places the container at the specified position.
+     * @param player The Player To Send The Packet Too
+     * @param pos - The position to place the container at.
+     */
+    protected placeContainer(player: Player, pos: BlockPosition): void {
+        const networkId = BlockPermutation.resolve(this.blockIdentifier).networkId
+        const packet = new UpdateBlockPacket();
+        packet.position = pos;
+        packet.networkBlockId = networkId;
+        packet.flags = 0;
+        packet.layer = 0;
+        packet.offset = 0;
+        player.send(packet);
+    }
+
+    /**
+     * Opens the container.
+     * @param player The Player To Send The Packet Too
+     * @param pos The Block Position
+     * @remarks This is called when the container is opened.
+     */
+    protected openContainer(player: Player, pos: BlockPosition): void {
+        const packet = new ContainerOpenPacket();
+        packet.identifier = this.containerId;
+        packet.type = this.containerType;
+        packet.position = pos;
+        packet.uniqueId = -1n;
+        player.send(packet);
+        PlayerManager.setContainer(player, { blockPos: pos, container: this })
+    }
+    /**
+     * Forcably closes the container.
+     * @param player The Player To Send The Packet Too
+     * @param serverInitiated Wether The Server is closing it
+     */
+    public closeContainer(player: Player, serverInitiated = true): void {
+        if (!PlayerManager.hasContainer(player)) throw Error(`Player Doesnt Have A Fake Container Open`)
+        const metadata = PlayerManager.getContainer(player)!
+        const pk = new ContainerClosePacket();
+        pk.identifier = this.containerId;
+        pk.serverInitiated = serverInitiated;
+        pk.type = this.containerType;
+        player.send(pk);
+        const schedule = player.world.schedule(1)
+        schedule.on(() => this.destroyContainer(player, metadata.blockPos))
+        this.callCloseCallback(player)
+        PlayerManager.removeContainer(player)
+
+    }
+
+
+    // ------------------------------
+    //  Handle Custom Container Name
+    // ------------------------------
+
+    /**
+     * Sends the custom name to the client.
+     */
+    private sendCustomName(player: Player, pos: BlockPosition): void {
+        const packet = new BlockActorDataPacket();
+        packet.position = pos;
+        const tag = new StringTag({ name: "CustomName", value: this.customName })
+        if (!packet.nbt) packet.nbt = new CompoundTag()
+        packet.nbt.addTag(tag)
+        player.send(packet)
+    }
+
     /**
      * Sets a custom name to the container.
-     *
      * @param name - The name to set.
-     *
      * @remarks This needs to be set BEFORE sending the container.
      */
     public setCustomName(name: string): void {
@@ -209,92 +296,50 @@ export class FakeContainer {
     }
 
     /**
-     * Sends the container's custom name to the client.
+     * Gets the custom name of the container.
+     * @returns The custom name of the container.
      */
-    private sendCustomName(): void {
-        const pk = new BlockActorDataPacket();
-        pk.position = this.position;
-        if (!pk.nbt) pk.nbt = new CompoundTag()
-        pk.nbt.addTag(new StringTag({ value: this.customName, name: "CustomName" }))
-        this.player.send(pk)
+    public getCustomName(): string | undefined {
+        return this.customName
     }
 
+
+
+
+    // -----------------------------
+    //       Handle Callbacks
+    // -----------------------------
+
     /**
-     * Callback is triggered when the player interacts with an item,
-     * in the container, or in its inventory.
-     * 
-     * If callback returns `CANCEL`, the items wont be allowed to be `taken / placed / swapped`
+     * Sets the callback to be called when the container is interacted with.
+     * @param callback - The callback to be called when the container is interacted with.
      */
     public onTransaction(callback: TransactionCallback): void {
         this.transactionCallback = callback;
     }
 
     /**
-     * Returns whether a transaction callback is set.
+     * Calls the transaction callback with the given action.
+     * @param action - The action to be passed to the callback.
+     * @returns The result of the callback, or undefined if no callback is set.
      */
-    private hasTransactionCallback(): boolean {
-        return this.transactionCallback !== undefined;
-    }
-
-    /**
-     * Calls the transaction callback.
-     */
-    public callTransactionCallback(action: ItemStackRequestAction): ItemInteractionData | void {
-        if (this.hasTransactionCallback()) return this.transactionCallback(action)
+    public callTransactionCallback(action: ItemStackRequestAction, player: Player): ItemInteractionData | void {
+        if (this.transactionCallback !== undefined) return this.transactionCallback({ action, player })
         return
     }
 
     /**
-     * Callback is triggered when the player closes the container, or is forced to do so.
+     * Sets the callback to be called when the container is closed.
+     * @param callback - The callback to be called when the container is closed.
      */
-    public onContainerClose(callback: ContainerCloseCallback): void {
+    public onClose(callback: ContainerCloseCallback): void {
         this.containerCloseCallback = callback;
     }
 
     /**
-     * Returns whether a container close callback is set.
+     * Calls the close callback
      */
-    private hasContainerCloseCallback(): boolean {
-        return this.containerCloseCallback !== undefined;
-    }
-
-    /**
-     * Calls the container close callback.
-     */
-    public callContainerCloseCallback(): void {
-        if (this.hasContainerCloseCallback()) this.containerCloseCallback();
-        this.destruct();
-    }
-
-    /**
-     * Destroys the container client-side,
-     * and replaces it with the original block.
-     */
-    protected destroyContainer(pos: BlockPosition): void {
-        this.closeContainer()
-        const block = getBlockAtPosition(this.player, pos)
-        let packet = new UpdateBlockPacket();
-        packet.position = pos;
-        packet.networkBlockId = BlockPermutation.resolve(block.type.identifier).network;
-        packet.flags = UpdateBlockFlagsType.Network;
-        packet.layer = 0;
-        packet.offset = 0;
-        this.player.send(packet);
-    }
-
-    /**
-     * Destructs all the ItemStack instances of the container's inventory.
-     *
-     * @remarks This is called automatically if `destructItems` is set to true.
-     */
-    public destructAllItems(): void {
-        this.inventory = {};
-    }
-
-    /**
-     * Destroys the container, and destructs all the ItemStack instances, if needed.
-     */
-    public destruct(): void {
-        this.destroyContainer(this.position);
+    public callCloseCallback(player?: Player): void {
+        if (this.containerCloseCallback !== undefined) this.containerCloseCallback(player);
     }
 }

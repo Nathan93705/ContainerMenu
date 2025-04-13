@@ -1,5 +1,5 @@
-import { Player, Block, BlockPermutation, BlockType, BlockIdentifier } from "@serenityjs/core";
-import { FakeContainer, getAbovePosition } from "./FakeContainer";
+import { BlockIdentifier } from "@serenityjs/core";
+import { FakeContainer } from "./FakeContainer";
 import { FakeDoubleContainer } from "./FakeDoubleContainer";
 import { ContainerInventory } from "../ContainerMenu";
 import { ContainerType } from "@serenityjs/protocol";
@@ -50,176 +50,168 @@ export enum ContainerSize {
 }
 
 export class TrappedChestContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.TrappedChest)))!,
+            BlockIdentifier.TrappedChest,
             ContainerType.Container,
             ContainerSize.Chest,
-            player,
             inventory
         );
     }
 }
 
+
 export class ChestContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Chest)))!,
+            BlockIdentifier.Chest,
             ContainerType.Container,
             ContainerSize.Chest,
-            player,
             inventory
         );
     }
 }
 
 export class DispenserContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Dispenser)))!,
+            BlockIdentifier.Dispenser,
             ContainerType.Dispenser,
             ContainerSize.Dispenser,
-            player,
             inventory
         );
     }
 }
 
 export class DropperContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Dropper)))!,
+            BlockIdentifier.Dropper,
             ContainerType.Dropper,
             ContainerSize.Dropper,
-            player,
             inventory
         );
     }
 }
 
 export class EnchantingContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.EnchantingTable)))!,
+            BlockIdentifier.EnchantingTable,
             ContainerType.Enchantment,
             ContainerSize.EnchantingTable,
-            player,
             inventory
         );
     }
 }
 
 export class HopperContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Hopper)))!,
+            BlockIdentifier.Hopper,
             ContainerType.Hopper,
             ContainerSize.Hopper,
-            player,
             inventory
         );
     }
 }
 
 
-/**
- * New Stuff
- */
+
 export class CraftingContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.CraftingTable)))!,
+            BlockIdentifier.CraftingTable,
             ContainerType.Workbench,
             ContainerSize.CraftingTable,
-            player,
             inventory
         );
     }
 }
+
 export class SmithingContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.SmithingTable)))!,
+            BlockIdentifier.SmithingTable,
             ContainerType.SmithingTable,
             ContainerSize.SmithingTable,
-            player,
             inventory
         );
     }
 }
+
 export class FurnaceContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Furnace)))!,
+            BlockIdentifier.Furnace,
             ContainerType.Furnace,
             ContainerSize.Furnace,
-            player,
             inventory
         );
     }
 }
+
 export class SmokerContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Smoker)))!,
+            BlockIdentifier.Smoker,
             ContainerType.Smoker,
             ContainerSize.Smoker,
-            player,
             inventory
         );
     }
 }
+
 export class BlastFurnaceContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.BlastFurnace)))!,
+            BlockIdentifier.BlastFurnace,
             ContainerType.BlastFurnace,
             ContainerSize.BlastFurnace,
-            player,
             inventory
         );
     }
 }
+
 export class AnvilContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Anvil)))!,
+            BlockIdentifier.Anvil,
             ContainerType.Anvil,
             ContainerSize.Anvil,
-            player,
             inventory
         );
     }
 }
+
 export class BrewingStandContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.BrewingStand)))!,
+            BlockIdentifier.BrewingStand,
             ContainerType.BrewingStand,
             ContainerSize.BrewingStand,
-            player,
             inventory
         );
     }
 }
+
 export class GrindstoneContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Grindstone)))!,
+            BlockIdentifier.Grindstone,
             ContainerType.Grindstone,
             ContainerSize.Grindstone,
-            player,
             inventory
         );
     }
 }
+
 export class StonecutterContainer extends FakeContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Stonecutter)))!,
+            BlockIdentifier.Stonecutter,
             ContainerType.Stonecutter,
             ContainerSize.Stonecutter,
-            player,
             inventory
         );
     }
@@ -229,24 +221,22 @@ export class StonecutterContainer extends FakeContainer {
  * Double Containers
  */
 export class DoubleChestContainer extends FakeDoubleContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.Chest)))!,
+            BlockIdentifier.Chest,
             ContainerType.Container,
             ContainerSize.DoubleChest,
-            player,
             inventory
         );
     }
 }
 
 export class DoubleTrappedChestContainer extends FakeDoubleContainer {
-    public constructor(player: Player, inventory?: ContainerInventory) {
+    public constructor(inventory?: ContainerInventory) {
         super(
-            new Block(player.dimension, getAbovePosition(player), BlockPermutation.create(BlockType.get(BlockIdentifier.TrappedChest)))!,
+            BlockIdentifier.TrappedChest,
             ContainerType.Container,
             ContainerSize.DoubleChest,
-            player,
             inventory
         );
     }

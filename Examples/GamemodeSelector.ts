@@ -4,7 +4,7 @@ import { FakeContainerType } from "../src/containers/Containers";
 import { CompoundTag } from "@serenityjs/nbt";
 
 export function openMenu(player: Player) {
-    const container = ContainerMenu.create(player, FakeContainerType.Chest)
+    const container = ContainerMenu.create(FakeContainerType.Chest)
 
     const survival = new ItemStack(ItemIdentifier.GrassBlock)
     const comp1 = new CompoundTag({ name: "display" }).createStringTag({ name: "Name", value: "Survival" });
@@ -24,10 +24,10 @@ export function openMenu(player: Player) {
 
     container.setCustomName("Gamemode Selector")
 
-    container.onTransaction((action) => {
+    container.onTransaction(({ action }) => {
         const slot = ContainerMenu.getSlot(action).sourceSlot
         if (!slot) {
-            container.closeContainer();
+            container.closeContainer(player);
             return
         }
 
@@ -45,7 +45,7 @@ export function openMenu(player: Player) {
                 player.sendMessage(`Set Gamemode To Spectator`)
                 break;
         }
-        container.closeContainer();
+        container.closeContainer(player);
     })
-    container.sendToPlayer();
+    container.show(player);
 }

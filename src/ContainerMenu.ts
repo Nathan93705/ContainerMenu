@@ -1,8 +1,7 @@
-import { AnvilContainer, BlastFurnaceContainer, BrewingStandContainer, ChestContainer, CraftingContainer, DispenserContainer, DoubleChestContainer, DoubleTrappedChestContainer, DropperContainer, EnchantingContainer, FakeContainerType, FurnaceContainer, GrindstoneContainer, HopperContainer, SmithingContainer, SmokerContainer, StonecutterContainer, TrappedChestContainer } from "./containers/Containers";
 import { ItemStackRequestAction, ItemStackRequestActionType } from "@serenityjs/protocol";
 import { FakeContainer } from "./containers/FakeContainer";
-import { ItemStack, Player } from "@serenityjs/core";
-import { PlayerManager } from "./PlayerManager";
+import { ItemStack } from "@serenityjs/core";
+import { FakeContainerType, ChestContainer, TrappedChestContainer, DoubleChestContainer, DoubleTrappedChestContainer, HopperContainer, DropperContainer, DispenserContainer, EnchantingContainer, AnvilContainer, BlastFurnaceContainer, BrewingStandContainer, CraftingContainer, FurnaceContainer, GrindstoneContainer, SmithingContainer, SmokerContainer, StonecutterContainer } from "./containers/Containers";
 
 /**
  * Cancels Container Menu Item Transaction
@@ -23,45 +22,45 @@ export namespace ContainerMenu {
      * @param destructItems - Whether the ItemStacks should be automatically destructed.
      * @param inventory - The inventory of the container.
      */
-    export function create(player: Player, container: FakeContainerType, inventory?: ContainerInventory): FakeContainer {
-        if (!PlayerManager.hasContainer(player.connection)) {
-            switch (container) {
-                case FakeContainerType.Chest:
-                    return new ChestContainer(player, inventory);
-                case FakeContainerType.TrappedChest:
-                    return new TrappedChestContainer(player, inventory);
-                case FakeContainerType.DoubleChest:
-                    return new DoubleChestContainer(player, inventory);
-                case FakeContainerType.DoubleTrappedChest:
-                    return new DoubleTrappedChestContainer(player, inventory);
-                case FakeContainerType.Hopper:
-                    return new HopperContainer(player, inventory);
-                case FakeContainerType.Dropper:
-                    return new DropperContainer(player, inventory);
-                case FakeContainerType.Dispenser:
-                    return new DispenserContainer(player, inventory);
-                case FakeContainerType.EnchantingTable:
-                    return new EnchantingContainer(player, inventory);
-                case FakeContainerType.Anvil:
-                    return new AnvilContainer(player, inventory);
-                case FakeContainerType.BlastFurnace:
-                    return new BlastFurnaceContainer(player, inventory);
-                case FakeContainerType.BrewingStand:
-                    return new BrewingStandContainer(player, inventory);
-                case FakeContainerType.CraftingTable:
-                    return new CraftingContainer(player, inventory);
-                case FakeContainerType.Furnace:
-                    return new FurnaceContainer(player, inventory);
-                case FakeContainerType.Grindstone:
-                    return new GrindstoneContainer(player, inventory);
-                case FakeContainerType.SmithingTable:
-                    return new SmithingContainer(player, inventory);
-                case FakeContainerType.Smoker:
-                    return new SmokerContainer(player, inventory);
-                case FakeContainerType.Stonecutter:
-                    return new StonecutterContainer(player, inventory);
-            }
-        } else throw new Error("Player already has a fake container assigned. Close it before creating a new one.");
+    export function create(container: FakeContainerType, inventory?: ContainerInventory): FakeContainer {
+        switch (container) {
+            case FakeContainerType.Chest:
+                return new ChestContainer(inventory);
+            case FakeContainerType.TrappedChest:
+                return new TrappedChestContainer(inventory);
+            case FakeContainerType.DoubleChest:
+                return new DoubleChestContainer(inventory);
+            case FakeContainerType.DoubleTrappedChest:
+                return new DoubleTrappedChestContainer(inventory);
+            case FakeContainerType.Hopper:
+                return new HopperContainer(inventory);
+            case FakeContainerType.Dropper:
+                return new DropperContainer(inventory);
+            case FakeContainerType.Dispenser:
+                return new DispenserContainer(inventory);
+            case FakeContainerType.EnchantingTable:
+                return new EnchantingContainer(inventory);
+            case FakeContainerType.Anvil:
+                return new AnvilContainer(inventory);
+            case FakeContainerType.BlastFurnace:
+                return new BlastFurnaceContainer(inventory);
+            case FakeContainerType.BrewingStand:
+                return new BrewingStandContainer(inventory);
+            case FakeContainerType.CraftingTable:
+                return new CraftingContainer(inventory);
+            case FakeContainerType.Furnace:
+                return new FurnaceContainer(inventory);
+            case FakeContainerType.Grindstone:
+                return new GrindstoneContainer(inventory);
+            case FakeContainerType.SmithingTable:
+                return new SmithingContainer(inventory);
+            case FakeContainerType.Smoker:
+                return new SmokerContainer(inventory);
+            case FakeContainerType.Stonecutter:
+                return new StonecutterContainer(inventory);
+            default:
+                throw new Error(`Container type ${container} is not supported.`);
+        }
     }
 
     interface ActionData {
